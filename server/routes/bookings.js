@@ -5,8 +5,11 @@ const { protect, admin } = require('../middleware/auth');
 
 router.post('/send-otp', protect, sendBookingOTP);
 router.post('/', protect, bookEvent);
-router.put('/:id/confirm', protect, admin, confirmBooking);
 router.get('/my', protect, getMyBookings);
 router.delete('/:id', protect, cancelBooking);
+
+// FIX: User khud pay kar paye - admin hata diya
+router.put('/confirm/:id', protect, confirmBooking);
+router.put('/:id/confirm', protect, confirmBooking);
 
 module.exports = router;

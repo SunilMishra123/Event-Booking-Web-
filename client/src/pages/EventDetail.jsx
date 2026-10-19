@@ -32,7 +32,7 @@ const EventDetail = () => {
 
     const handleBooking = async () => {
         if (!user) {
-            navigate('/login');
+            navigate(`/login?redirect=/events/${id}`);
             return;
         }
         setBookingLoading(true);
@@ -43,16 +43,18 @@ const EventDetail = () => {
             if (!showOTP) {
                 await api.post('/bookings/send-otp');
                 setShowOTP(true);
-                setSuccessMsg('OTP sent to your email. Please verify to confirm booking.');
+                setSuccessMsg('OTP sent to your email! (Check spam also)');
             } else {
                 await api.post('/bookings', { eventId: event._id, otp });
                 setSuccessMsg('Booking requested! Awaiting admin confirmation.');
                 setShowOTP(false);
-                // Update local seats count dynamically after booking
-                setEvent({ ...event, availableSeats: event.availableSeats - 1 });
+                setOtp('');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Booking failed');
+            if (err.response?.data?.message?.toLowerCase().includes('otp')) {
+                setOtp('');
+            }
         } finally {
             setBookingLoading(false);
         }
@@ -62,6 +64,7 @@ const EventDetail = () => {
     if (error && !event) return <div className="text-center py-20 text-xl text-red-500">{error || 'Event not found'}</div>;
 
     const isSoldOut = event.availableSeats <= 0;
+    const isAlreadyRequested = successMsg && !showOTP && successMsg.includes('requested');
 
     return (
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden mt-8">
@@ -75,7 +78,7 @@ const EventDetail = () => {
 
             <div className="p-8 md:p-12">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
-                    <div>
+                    <div className="flex-1">
                         <div className="inline-block bg-gray-200 text-gray-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-3">
                             {event.category}
                         </div>
@@ -88,41 +91,28 @@ const EventDetail = () => {
 
                         <div className="space-y-4 mb-8">
                             <div className="flex items-center gap-4 text-gray-600">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0">
-                                    <FaMoneyBillWave />
-                                </div>
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0"><FaMoneyBillWave /></div>
                                 <div>
                                     <p className="text-sm font-semibold text-gray-400 uppercase">Ticket Price</p>
                                     <p className="font-bold text-gray-800 text-lg">{event.ticketPrice === 0 ? <span className="text-green-500">Free</span> : `₹${event.ticketPrice}`}</p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-4 text-gray-600">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0">
-                                    <FaChair />
-                                </div>
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0"><FaChair /></div>
                                 <div>
                                     <p className="text-sm font-semibold text-gray-400 uppercase">Availability</p>
-                                    <p className="font-bold text-gray-800">
-                                        <span className={event.availableSeats < 10 ? 'text-orange-500' : ''}>{event.availableSeats}</span> / {event.totalSeats}
-                                    </p>
+                                    <p className="font-bold text-gray-800"><span className={event.availableSeats < 10 ? 'text-orange-500' : ''}>{event.availableSeats}</span> / {event.totalSeats}</p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-4 text-gray-600">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0">
-                                    <FaCalendarAlt />
-                                </div>
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0"><FaCalendarAlt /></div>
                                 <div>
                                     <p className="text-sm font-semibold text-gray-400 uppercase">Date</p>
                                     <p className="font-bold text-gray-800">{new Date(event.date).toLocaleDateString()}</p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-4 text-gray-600">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0">
-                                    <FaMapMarkerAlt />
-                                </div>
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-900 shrink-0"><FaMapMarkerAlt /></div>
                                 <div>
                                     <p className="text-sm font-semibold text-gray-400 uppercase">Location</p>
                                     <p className="font-bold text-gray-800">{event.location}</p>
@@ -133,30 +123,37 @@ const EventDetail = () => {
                         {showOTP && (
                             <div className="mb-4">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Enter OTP to Confirm</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="6-digit code"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-700 transition shadow-sm font-bold tracking-widest text-center text-lg"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                    maxLength="6"
+                                <input 
+                                    type="text" 
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    autoFocus
+                                    placeholder="123456" 
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-black bg-white text-black placeholder:text-gray-400 focus:ring-2 focus:ring-black transition shadow-sm font-bold tracking-[0.3em] text-center text-xl outline-none" 
+                                    style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000' }}
+                                    value={otp} 
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
+                                    maxLength={6} 
                                 />
+                                <p className="text-xs text-gray-500 mt-2 text-center">Sent to: {user?.email}</p>
+                                <p className="text-[11px] text-center mt-1 font-mono text-black">You typed: {otp || '---'}</p>
                             </div>
                         )}
 
-                        <button
-                            onClick={handleBooking}
-                            disabled={isSoldOut || bookingLoading || (showOTP && !otp)}
-                            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition shadow-lg ${isSoldOut || (successMsg && !showOTP)
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'
-                                }`}
+                        <button 
+                            onClick={handleBooking} 
+                            disabled={isSoldOut || bookingLoading || (showOTP && otp.length !== 6)} 
+                            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : isAlreadyRequested ? 'bg-green-600 text-white' : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'}`}
                         >
-                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Confirm' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
+                            {bookingLoading ? 'Processing...' : (showOTP ? `Verify OTP (${otp.length}/6)` : (isAlreadyRequested ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
                         </button>
-                        {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
-                        {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}
+
+                        {isAlreadyRequested && (
+                          <button onClick={() => navigate('/my-bookings')} className="w-full mt-3 py-3 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700">Go to My Bookings</button>
+                        )}
+
+                        {error && <p className="text-red-600 mt-4 text-center font-medium bg-red-50 p-3 rounded-xl border border-red-200 text-sm">{error}</p>}
+                        {successMsg && <p className="text-green-700 mt-4 text-center font-medium bg-green-50 p-3 rounded-xl border border-green-200 text-sm">{successMsg}</p>}
                     </div>
                 </div>
             </div>

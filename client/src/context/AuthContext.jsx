@@ -9,7 +9,8 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const userInfo = localStorage.getItem('userInfo');
-        if (userInfo) {
+        const token = localStorage.getItem('token');
+        if (userInfo && token) {
             setUser(JSON.parse(userInfo));
         }
         setLoading(false);
@@ -18,20 +19,29 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const { data } = await api.post('/auth/login', { email, password });
+            console.log("LOGIN SUCCESS DATA:", data);
+           
+            const token = data.token || data?.user?.token;
+            if (!token) throw new Error("No token from backend");
+
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('token', token);
             return data;
         } catch (error) {
-            if (error.response?.data?.needsVerification) throw error.response.data;
-            throw error.response?.data?.message || 'Login failed';
+            console.log("LOGIN ERROR FULL:", error.response?.data);
+            
+            if (error.response?.data?.needsVerification) {
+                throw new Error("Please verify OTP first. Check your email.");
+            }
+            throw error.response?.data?.message || error.message || 'Login failed';
         }
     };
 
     const register = async (name, email, password) => {
         try {
             const { data } = await api.post('/auth/register', { name, email, password });
-            return data; // Returns { message, email }
+            return data;
         } catch (error) {
             throw error.response?.data?.message || 'Registration failed';
         }

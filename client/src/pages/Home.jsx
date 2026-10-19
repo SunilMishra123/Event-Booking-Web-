@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../utils/axios';
-import { FaCalendarAlt, FaMapMarkerAlt, FaSearch, FaRegClock, FaTicketAlt, FaShieldAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaMapMarkerAlt, FaSearch, FaRegClock, FaTicketAlt, FaShieldAlt, FaMoon, FaSun } from 'react-icons/fa';
 
 const Home = () => {
     const [events, setEvents] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
+    const [darkMode, setDarkMode] = useState(true); 
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            fetchEvents();
-        }, 400); // 400ms debounce
+        const timeoutId = setTimeout(() => fetchEvents(), 400);
         return () => clearTimeout(timeoutId);
     }, [search]);
 
@@ -19,132 +20,88 @@ const Home = () => {
         try {
             const { data } = await api.get(`/events?search=${search}`);
             setEvents(data);
-        } catch (error) {
-            console.error('Error fetching events:', error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
+    const scrollToEvents = () => document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
+
     return (
-        <div className="flex flex-col min-h-screen">
-            {/* Hero Section */}
-            <div className="relative bg-black text-white rounded-3xl overflow-hidden mb-12 shadow-2xl">
-                <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=3000&auto=format&fit=crop')] bg-cover bg-center"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
-                <div className="relative p-10 md:p-20 text-center flex flex-col items-center z-10">
-                    <span className="bg-white/20 text-white backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 border border-white/20">Welcome to Eventora</span>
-                    <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight tracking-tight drop-shadow-lg">
-                        Find Your Next <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">Unforgettable</span> Experience
-                    </h1>
-                    <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-                        Discover the best tech conferences, late-night music festivals, and hands-on workshops happening directly in your area. Secure your spot today.
-                    </p>
+        <div className={`${darkMode 
+            ? 'bg-[#050507] text-white' 
+            : 'bg-[#f6f6f9] text-[#0a0a14]'} min-h-screen transition-all duration-700 flex flex-col relative overflow-hidden`}>
 
-                    <div className="w-full max-w-2xl mx-auto relative flex items-center shadow-2xl group">
-                        <FaSearch className="absolute left-6 text-gray-500 text-xl group-focus-within:text-black transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search events by title..."
-                            className="w-full pl-16 pr-6 py-5 rounded-full text-lg text-black bg-white/95 backdrop-blur-sm border-2 border-transparent focus:border-gray-500 focus:outline-none transition-all placeholder-gray-400 font-medium"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                </div>
+           
+            <div className="fixed inset-0 pointer-events-none">
+                {darkMode ? (
+                    <>
+                        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#6d28d9]/20 rounded-full blur-[150px]"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#0ea5e9]/15 rounded-full blur-[150px]"></div>
+                        <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-[#ec4899]/10 rounded-full blur-[130px]"></div>
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-200/40 rounded-full blur-[150px]"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-200/40 rounded-full blur-[150px]"></div>
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:60px_60px] opacity-[0.3]"></div>
+                    </>
+                )}
             </div>
 
-            {/* Why Choose Us / Features row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 px-4">
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:-translate-y-1 transition duration-300">
-                    <div className="w-16 h-16 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-md shadow-gray-200/50">
-                        <FaRegClock />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">Fast Booking</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">Secure your tickets instantly with our fast streamlined booking infrastructure built for speed.</p>
-                </div>
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:-translate-y-1 transition duration-300">
-                    <div className="w-16 h-16 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-md shadow-gray-200/50">
-                        <FaTicketAlt />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">Seamless Access</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">Download tickets instantly or manage them right from your personal dashboard with easily.</p>
-                </div>
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:-translate-y-1 transition duration-300">
-                    <div className="w-16 h-16 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-md shadow-gray-200/50">
-                        <FaShieldAlt />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">Secure Platform</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">All transactions and registrations are bounded by cutting-edge security and 2FA OTP tech.</p>
-                </div>
+           
+            <div className="relative z-10 flex justify-end p-6">
+                <button onClick={() => setDarkMode(!darkMode)} className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl border transition-all ${darkMode ? 'bg-white/10 border-white/20 text-white' : 'bg-black/5 border-black/10 text-black'}`}>
+                    {darkMode ? <FaSun /> : <FaMoon />}
+                </button>
             </div>
 
-            <div className="flex items-center justify-between mb-8 px-2 border-b border-gray-200 pb-4">
-                <h2 className="text-3xl font-extrabold text-gray-900">Upcoming Events</h2>
-                <div className="text-gray-500 font-medium">{events.length} results found</div>
+            {/* HERO */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className={`relative z-10 mx-4 md:mx-8 rounded-[2.5rem] overflow-hidden border ${darkMode ? 'bg-[#0f0f12]/80 border-white/10' : 'bg-white/70 border-black/5'} backdrop-blur-2xl shadow-2xl`}>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20"></div>
+                <div className="relative p-10 md:p-20 text-center flex flex-col items-center">
+                    <span className={`backdrop-blur-md px-5 py-2 rounded-full text-[10px] font-bold tracking-[0.3em] uppercase mb-6 border ${darkMode ? 'bg-white/10 border-white/20 text-gray-300' : 'bg-black/5 border-black/10 text-gray-600'}`}>Welcome to Eventora</span>
+                    <h1 className="text-5xl md:text-7xl font-black leading-[0.9] tracking-tight mb-6">Find Your Next <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400">Unforgettable</span> Experience</h1>
+                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-lg mb-10 max-w-2xl`}>Tech conferences, music festivals, and workshops near you - all in one dark light universe.</p>
+                    <div className="w-full max-w-2xl relative">
+                        <FaSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <input type="text" placeholder="Search events by title..." className={`w-full pl-14 pr-6 py-4 rounded-full text-[15px] font-medium focus:outline-none transition-all ${darkMode ? 'bg-[#1a1a1f] text-white border border-white/10 placeholder-gray-500 focus:border-violet-500/50' : 'bg-white text-black border border-black/10 shadow-lg placeholder-gray-400'}`} value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </div>
+                </div>
+            </motion.div>
+
+          
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto w-full mt-8 px-4">
+                {[
+                    { icon: <FaRegClock />, title: "Fast Booking", desc: "Secure tickets instantly with ultra-fast infrastructure built for speed.", action: scrollToEvents },
+                    { icon: <FaTicketAlt />, title: "Seamless Access", desc: "Download or manage all tickets from your personal dashboard.", action: () => navigate('/dashboard') },
+                    { icon: <FaShieldAlt />, title: "Secure Platform", desc: "Protected by 256-bit SSL, JWT Auth & 2FA OTP security.", action: () => alert('🔒 Secure') }
+                ].map((c, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.15 }} whileHover={{ y: -6 }} onClick={c.action} className={`p-8 rounded-[1.8rem] border backdrop-blur-xl cursor-pointer group ${darkMode ? 'bg-[#121216]/80 border-white/[0.08] hover:border-violet-500/30 hover:bg-[#18181d]' : 'bg-white/80 border-black/5 hover:border-violet-300 shadow-sm hover:shadow-xl'} transition-all`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-all group-hover:scale-110 ${darkMode ? 'bg-white text-black' : 'bg-black text-white'}`}>{c.icon}</div>
+                        <h3 className="font-bold text-[16px] mb-2">{c.title}</h3>
+                        <p className={`text-[13px] leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{c.desc}</p>
+                    </motion.div>
+                ))}
             </div>
 
-            {loading ? (
-                <div className="text-center py-20 text-xl font-semibold text-gray-600">Loading events...</div>
-            ) : events.length === 0 ? (
-                <div className="text-center py-20 text-xl text-gray-500">No events found matching your search.</div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {events.map(event => (
-                        <div key={event._id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
-                            <div className="h-48 bg-gray-200 overflow-hidden relative">
-                                {event.image ? (
-                                    <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-600 font-bold text-2xl">
-                                        {event.category || 'Event'}
-                                    </div>
-                                )}
-                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                                    {event.ticketPrice === 0 ? <span className="text-green-600">FREE</span> : <span className="text-gray-900">₹{event.ticketPrice}</span>}
-                                </div>
+            {/* EVENTS */}
+            <div id="events-section" className="relative z-10 max-w-7xl mx-auto w-full mt-16 px-4 pb-20">
+                <h2 className="text-3xl font-black mb-8 tracking-tight">Upcoming Events <span className={`ml-3 text-xs font-bold px-3 py-1 rounded-full ${darkMode ? 'bg-white/10' : 'bg-black/5'}`}>{events.length}</span></h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {events.map((event, idx) => (
+                        <motion.div key={event._id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: idx * 0.05 }} className={`rounded-[1.5rem] overflow-hidden border backdrop-blur-xl group ${darkMode ? 'bg-[#121216] border-white/5 hover:border-white/15' : 'bg-white border-black/5 hover:shadow-xl'} transition-all`}>
+                            <div className="h-48 relative overflow-hidden">
+                                <img src={event.image} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="" />
+                                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[11px] font-bold backdrop-blur ${event.ticketPrice === 0 ? 'bg-green-500 text-white' : 'bg-white text-black'}`}>{event.ticketPrice === 0 ? 'FREE' : `₹${event.ticketPrice}`}</div>
                             </div>
-                            <div className="p-6 flex-grow flex flex-col">
-                                <div className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">{event.category}</div>
-                                <h2 className="text-xl font-bold text-gray-800 mb-3">{event.title}</h2>
-                                <div className="flex flex-col gap-2 mb-4 text-gray-600 text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <FaCalendarAlt className="text-gray-400" />
-                                        <span>{new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <FaMapMarkerAlt className="text-gray-400" />
-                                        <span>{event.location}</span>
-                                    </div>
-                                </div>
-                                <div className="mt-auto">
-                                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                        <div className="bg-gray-700 h-2 rounded-full" style={{ width: `${(event.availableSeats / event.totalSeats) * 100}%` }}></div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mb-4">{event.availableSeats} of {event.totalSeats} seats remaining</p>
-                                    <Link to={`/events/${event._id}`} className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-2 rounded-lg transition">
-                                        View Details
-                                    </Link>
-                                </div>
+                            <div className="p-5">
+                                <h3 className="font-bold">{event.title}</h3>
+                                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>📍 {event.location}</p>
+                                <Link to={`/events/${event._id}`} className={`mt-4 block text-center text-xs font-bold py-2.5 rounded-full border transition ${darkMode ? 'border-white/10 hover:bg-white hover:text-black' : 'border-black/10 hover:bg-black hover:text-white'}`}>View Details</Link>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            )}
-
-            {/* Footer Section */}
-            <footer className="mt-auto pt-16 pb-8 border-t border-gray-200 text-center">
-                <div className="flex justify-center items-center gap-2 mb-4">
-                    <FaTicketAlt className="text-gray-800 text-2xl" />
-                    <span className="text-xl font-bold text-gray-900">Eventora</span>
-                </div>
-                <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-                    The simplest, most dynamic way to manage, discover, and host world-class events in your local city. Let's make memories together.
-                </p>
-                <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                    &copy; {new Date().getFullYear()} Eventora Platform. All rights reserved.
-                </div>
-            </footer>
+            </div>
         </div>
     );
 };

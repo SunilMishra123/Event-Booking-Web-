@@ -1,105 +1,50 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [otp, setOtp] = useState('');
-    const [showOTP, setShowOTP] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const { login, verifyOTP } = useContext(AuthContext);
+    const { login } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    useEffect(()=>{ setEmail(''); setPassword(''); },[]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
+        if (!email.trim()) { setError("Email id is required *"); return; }
+        if (!password) { setError("Password is required *"); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Enter valid Email id"); return; }
+        
+        setLoading(true); setError('');
         try {
-            if (!showOTP) {
-                const data = await login(email, password);
-                if (data.role === 'admin') navigate('/admin');
-                else navigate('/dashboard');
-            } else {
-                const data = await verifyOTP(email, otp);
-                if (data.role === 'admin') navigate('/admin');
-                else navigate('/dashboard');
-            }
-        } catch (err) {
-            if (err.needsVerification) {
-                setShowOTP(true);
-                setError('Account not verified. A new OTP has been sent to your email.');
-            } else {
-                setError(err.message || err);
-            }
-        } finally {
-            setLoading(false);
-        }
+            const data = await login(email.trim(), password);
+            navigate(data.role === 'admin' ? '/admin' : '/dashboard');
+        } catch (err) { setError(err.message || "Login failed"); }
+        finally { setLoading(false); }
     };
 
     return (
-        <div className="max-w-md mx-auto mt-20 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-            <div className="text-center mb-8">
-                <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Welcome Back</h2>
-                <p className="text-gray-500">Sign in to your Eventora account</p>
-            </div>
-
-            {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center shadow-inner border border-red-100">{error}</div>}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {!showOTP ? (
-                    <>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                            <input
-                                type="email"
-                                required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition shadow-sm"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                            <input
-                                type="password"
-                                required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition shadow-sm"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Verification Code (OTP)</label>
-                        <input
-                            type="text"
-                            required
-                            placeholder="6-digit code"
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-700 transition shadow-sm font-bold tracking-widest text-center text-lg"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            maxLength="6"
-                        />
+        <div className="min-h-[80vh] flex justify-center items-center p-4">
+            <div className="w-full max-w-md bg-[#fffaf0] p-8 rounded-[28px] border shadow-xl">
+                <h2 className="text-3xl font-black text-center text-black">Welcome Back</h2>
+                <p className="text-center text-gray-500 mb-6">All fields required *</p>
+                {error && <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4 text-center text-sm font-medium">{error}</div>}
+                <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
+                    <div><label className="text-sm font-bold text-black">Email *</label>
+                        <input type="text" placeholder="Enter email id" value={email} onChange={e=>setEmail(e.target.value)} required
+                        className="w-full mt-2 px-4 py-3 rounded-xl border bg-white text-black placeholder:text-gray-400 outline-none" style={{color:'#000'}} readOnly onFocus={e=>e.target.removeAttribute('readOnly')} />
                     </div>
-                )}
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-black focus:ring-4 focus:ring-gray-200 transition shadow-md"
-                >
-                    {loading ? 'Processing...' : (showOTP ? 'Verify OTP & Log In' : 'Sign In')}
-                </button>
-            </form>
-
-            <p className="text-center mt-8 text-gray-600">
-                Don't have an account? <Link to="/register" className="text-gray-900 font-bold hover:underline">Sign up</Link>
-            </p>
+                    <div><label className="text-sm font-bold text-black">Password *</label>
+                        <input type="password" placeholder="Enter password" value={password} onChange={e=>setPassword(e.target.value)} required
+                        className="w-full mt-2 px-4 py-3 rounded-xl border bg-white text-black placeholder:text-gray-400 outline-none" style={{color:'#000', backgroundColor:'#fff'}} readOnly onFocus={e=>e.target.removeAttribute('readOnly')} />
+                    </div>
+                    <button type="submit" disabled={loading} className="w-full bg-black text-white py-3.5 rounded-xl font-bold">{loading ? "Signing..." : "Sign In"}</button>
+                </form>
+            </div>
         </div>
     );
 };
-
 export default Login;
