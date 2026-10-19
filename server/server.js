@@ -16,18 +16,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 
+// Serve Frontend - FINAL FIX
+const clientDistPath = path.join(__dirname, 'client', 'dist');
+app.use(express.static(clientDistPath));
 
-app.use(express.static(path.join(__dirname, "/client/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "/client/dist/index.html"));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
-
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora')
