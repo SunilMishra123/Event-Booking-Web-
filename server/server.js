@@ -12,24 +12,23 @@ const bookingRoutes = require('./routes/bookings');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Serve Frontend - FINAL FIX
-const clientDistPath = path.join(__dirname, 'client', 'dist');
+// FINAL CORRECT PATH 
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+console.log("Serving from:", clientDistPath);
+
 app.use(express.static(clientDistPath));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-// Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora')
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
