@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 
 dotenv.config();
 
@@ -12,24 +11,41 @@ const bookingRoutes = require('./routes/bookings');
 
 const app = express();
 
-app.use(cors());
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://event-booking-web-pl.vercel.app",
+  "https://event-booking-web-git-main-eventora6s-projects.vercel.app",
+  "https://event-booking-7svgtoy-eventora6s-projects.vercel.app"
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+   
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); 
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
+
+
+app.get('/', (req, res) => {
+  res.json({ message: "Event Booking API is running", status: "OK" });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// FINAL CORRECT PATH 
-const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
-console.log("Serving from:", clientDistPath);
 
-app.use(express.static(clientDistPath));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientDistPath, 'index.html'));
-});
-
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
