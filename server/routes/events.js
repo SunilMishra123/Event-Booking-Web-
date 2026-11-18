@@ -7,7 +7,7 @@ const Booking = require('../models/Booking');
 
 router.get('/', getEvents);
 
-
+//Hii How are you
 router.put('/sync-seats', protect, admin, async (req, res) => {
     try {
         const events = await Event.find();

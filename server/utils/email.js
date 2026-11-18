@@ -4,7 +4,7 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS // tumhara pumfycmooxqcbbrh wala
+        pass: process.env.EMAIL_PASS 
     }
 });
 
@@ -28,7 +28,7 @@ const sendOTPEmail = async (userEmail, otp, type) => {
         console.log(`✅ OTP ${otp} sent to ${userEmail}`, info.messageId);
     } catch (error) {
         console.error('❌ EMAIL ERROR:', error.message);
-        // Error ko throw mat karo, warna register fail ho jayega
+       
     }
 };
 
