@@ -12,6 +12,7 @@ Eventora is a full-stack MERN application that allows users to seamlessly browse
   - **Admin**: Create, edit, and delete events. Confirm and reject all incoming booking requests, mark them as 'Paid' or 'Not Paid'. Access is strictly locked to database-flagged users only.
   - **User**: Browse events, submit ticket booking requests via OTP, view personal dashboard pending status, and cancel bookings.
 - **Event Management**: Create free and paid events with detailed descriptions, external image URLs, dates, categories, and seating capacity.
+
 - **Smart Booking System**:
   - Mandatory 2FA OTP to authorize a booking request.
   - All booking requests (both free and paid) enter a secure 'Pending' queue for Admin verification.
